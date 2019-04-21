@@ -1,0 +1,11 @@
+use_frameworks!
+
+target 'IPaKeyboardObserver_Example' do
+  pod 'IPaKeyboardObserver', :path => '../'
+
+  target 'IPaKeyboardObserver_Tests' do
+    inherit! :search_paths
+
+    
+  end
+end

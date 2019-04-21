@@ -1,0 +1,16 @@
+PODS:
+  - IPaKeyboardObserver (1.0)
+
+DEPENDENCIES:
+  - IPaKeyboardObserver (from `../`)
+
+EXTERNAL SOURCES:
+  IPaKeyboardObserver:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  IPaKeyboardObserver: d0fa3d6e1da067430281ffc7a24f2edec3355a7e
+
+PODFILE CHECKSUM: 3c6d6db94160ef6b5f19b2dfae39b5db42841e2f
+
+COCOAPODS: 1.7.0.beta.2
