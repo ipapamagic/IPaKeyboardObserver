@@ -91,8 +91,7 @@ public extension UIViewController {
         value = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as! NSValue
         value.getValue(&animationDuration)
         
-        value = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as! NSValue
-        value.getValue(&keyboardEndFrame)
+        
         // Animate up or down
         //        var animOptions:UIViewAnimationOptions
         //        switch (animationCurve) {
@@ -112,12 +111,11 @@ public extension UIViewController {
         updateViewConstraints()
         if let bottomConstraint = self._getBottomConstraint() {
             if (show) {
-                if #available(iOS 11.0, *) {
-                    bottomConstraint.constant = keyboardEndFrame.height - view.safeAreaInsets.bottom
-                } else {
-                    // Fallback on earlier versions
-                    bottomConstraint.constant = keyboardEndFrame.height - bottomLayoutGuide.length
-                }
+                value = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as! NSValue
+                value.getValue(&keyboardEndFrame)
+                let endFrame = self.view.convert(keyboardEndFrame, from: nil)
+                bottomConstraint.constant = self.view.bounds.height - endFrame.minY
+            
             }
             else {
                 bottomConstraint.constant = 0
