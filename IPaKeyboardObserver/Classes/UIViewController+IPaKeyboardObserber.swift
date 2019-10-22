@@ -42,13 +42,18 @@ public extension UIViewController {
         
         
     }
-    @objc func addTapToCloseKeyboard() {
-        guard let firstScrollView = self._getKeyboardObserverView() else {
-            return
+    @objc func addTapToCloseKeyboard(_ targetView:UIView? = nil) {
+        var targetView = targetView
+        if targetView == nil {
+            guard let firstScrollView = self._getKeyboardObserverView() else {
+                return
+            }
+            targetView = firstScrollView
         }
+        
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(UIViewController.onTapToDismissKeyboard(_:)))
         tapGesture.cancelsTouchesInView = false
-        firstScrollView.addGestureRecognizer(tapGesture)
+        targetView!.addGestureRecognizer(tapGesture)
     }
     @objc func onTapToDismissKeyboard(_ sender:Any) {
         self.view.endEditing(true)
