@@ -25,23 +25,6 @@ public extension UIViewController {
         }
         return firstScrollView as? UIScrollView
     }
-    fileprivate func _getBottomConstraint() -> NSLayoutConstraint? {
-        guard let firstScrollView = self._getKeyboardObserverView() else {
-            return nil
-        }
-        
-        return self.view.constraints.first { (constraint) -> Bool in
-            if let firstView = constraint.firstItem as? UIScrollView ,firstView == firstScrollView && constraint.firstAttribute == .bottom {
-                return true
-            }
-            if let secondView = constraint.secondItem as? UIScrollView,secondView == firstScrollView && constraint.secondAttribute == .bottom {
-                return true
-            }
-            return false
-        }
-        
-        
-    }
     @objc func addTapToCloseKeyboard(_ targetView:UIView? = nil) {
         var targetView = targetView
         if targetView == nil {
@@ -61,9 +44,9 @@ public extension UIViewController {
     @objc func addKeyboardObserver() {
         
         let nc = NotificationCenter.default
-        nc.addObserver(self, selector: #selector(UIViewController.keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
-        nc.addObserver(self, selector: #selector(UIViewController.keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
-        
+        nc.addObserver(self, selector: #selector(keyboardWillShow(notification:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+        nc.addObserver(self, selector: #selector(keyboardWillHide(notification:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+//        nc.addObserver(self, selector: #selector(keyboardWillChange(notification:)), name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
     
     @objc func removeKeyboardObserver() {
@@ -71,69 +54,62 @@ public extension UIViewController {
         let nc = NotificationCenter.default
         nc.removeObserver(self, name: UIResponder.keyboardWillShowNotification, object: nil)
         nc.removeObserver(self, name: UIResponder.keyboardWillHideNotification, object: nil)
+//        nc.removeObserver(self, name: UIResponder.keyboardWillChangeFrameNotification, object: nil)
     }
     
     //MARK: Keyboard notification
-    @objc func keyboardWillShow(_ aNotification:NSNotification) {
-        moveConfirmViewForKeyboard(aNotification,show:true)
-    }
-    @objc func keyboardWillHide(_ aNotification:NSNotification) {
-        
-        moveConfirmViewForKeyboard(aNotification,show:false)
-    }
-    
-    func moveConfirmViewForKeyboard(_ aNotification:NSNotification ,show:Bool) {
-        let userInfo = aNotification.userInfo!
+    @objc func keyboardWillShow(notification: NSNotification) {
+        let userInfo = notification.userInfo!
         // Get animation info from userInfo
         var animationDuration:TimeInterval = 0
         var animationCurve = UIView.AnimationCurve.easeInOut
         
         var keyboardEndFrame = CGRect()
         
-        var value = userInfo[UIResponder.keyboardAnimationCurveUserInfoKey] as! NSValue
-        value.getValue(&animationCurve)
-        
-        value = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as! NSValue
+        var value = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as! NSValue
         value.getValue(&animationDuration)
         
         
-        // Animate up or down
-        //        var animOptions:UIViewAnimationOptions
-        //        switch (animationCurve) {
-        //            case .EaseInOut:
-        //                animOptions = .CurveEaseInOut;
-        //                break;
-        //            case .EaseIn:
-        //                animOptions = .CurveEaseIn;
-        //                break;
-        //            case .EaseOut:
-        //                animOptions = .CurveEaseOut;
-        //                break;
-        //            case .Linear:
-        //                animOptions = .CurveLinear;
-        //                break;
-        //        }
-        updateViewConstraints()
-        if let bottomConstraint = self._getBottomConstraint() {
-            if (show) {
-                value = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as! NSValue
-                value.getValue(&keyboardEndFrame)
-                let endFrame = self.view.convert(keyboardEndFrame, from: nil)
-                bottomConstraint.constant = self.view.bounds.height - endFrame.minY
-            
-            }
-            else {
-                bottomConstraint.constant = 0
-            }
+        value = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as! NSValue
+        value.getValue(&keyboardEndFrame)
+        //safeAreaInset will include additionalSafeAreaInset,so have to remove it here
+        let keyboardHeight = keyboardEndFrame.height - self.view.safeAreaInsets.bottom + additionalSafeAreaInsets.bottom
+
+        additionalSafeAreaInsets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight , right: 0)
+        UIView.animate(withDuration: animationDuration) {
+            self.view.layoutIfNeeded();
         }
-        
-        
-        UIView.animate(withDuration: animationDuration, animations: {
-            self.view.layoutIfNeeded()
-        })
-        
-        
-        
     }
+
+    @objc func keyboardWillHide(notification: NSNotification) {
+        additionalSafeAreaInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+        let userInfo = notification.userInfo!
+        var animationDuration:TimeInterval = 0
+        let value = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as! NSValue
+        value.getValue(&animationDuration)
+
+        UIView.animate(withDuration: animationDuration) {
+            self.view.layoutIfNeeded();
+        }
+    }
+
+//    @objc func keyboardWillChange(notification: NSNotification) {
+//        additionalSafeAreaInsets = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: 0)
+//        let userInfo = notification.userInfo!
+//        var animationDuration:TimeInterval = 0
+//        var keyboardEndFrame = CGRect()
+//        var value = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as! NSValue
+//        value.getValue(&animationDuration)
+//
+//        value = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as! NSValue
+//        value.getValue(&keyboardEndFrame)
+//        let keyboardHeight = max(keyboardEndFrame.height - self.view.safeAreaInsets.bottom,0)
+//
+//        additionalSafeAreaInsets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight, right: 0)
+//        self.bottomLayoutGuide
+//        UIView.animate(withDuration: animationDuration) {
+//            self.view.layoutIfNeeded();
+//        }
+//    }
 
 }
