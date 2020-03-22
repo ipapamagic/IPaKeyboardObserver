@@ -62,7 +62,7 @@ public extension UIViewController {
         let userInfo = notification.userInfo!
         // Get animation info from userInfo
         var animationDuration:TimeInterval = 0
-        var animationCurve = UIView.AnimationCurve.easeInOut
+    //    var animationCurve = UIView.AnimationCurve.easeInOut
         
         var keyboardEndFrame = CGRect()
         
