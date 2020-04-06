@@ -59,26 +59,32 @@ public extension UIViewController {
     
     //MARK: Keyboard notification
     @objc func keyboardWillShow(notification: NSNotification) {
-        let userInfo = notification.userInfo!
-        // Get animation info from userInfo
-        var animationDuration:TimeInterval = 0
-    //    var animationCurve = UIView.AnimationCurve.easeInOut
         
-        var keyboardEndFrame = CGRect()
-        
-        var value = userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as! NSValue
-        value.getValue(&animationDuration)
-        
-        
-        value = userInfo[UIResponder.keyboardFrameEndUserInfoKey] as! NSValue
-        value.getValue(&keyboardEndFrame)
-        //safeAreaInset will include additionalSafeAreaInset,so have to remove it here
-        let keyboardHeight = keyboardEndFrame.height - self.view.safeAreaInsets.bottom + additionalSafeAreaInsets.bottom
+        guard let userInfo = notification.userInfo,let keyboardFrame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue
+           else {
+               return
+           }
 
-        additionalSafeAreaInsets = UIEdgeInsets(top: 0, left: 0, bottom: keyboardHeight , right: 0)
-        UIView.animate(withDuration: animationDuration) {
-            self.view.layoutIfNeeded();
-        }
+        let keyboardFrameInView = view.convert(keyboardFrame, from: nil)
+        let safeAreaFrame = view.safeAreaLayoutGuide.layoutFrame.insetBy(dx: 0, dy: -additionalSafeAreaInsets.bottom)
+        let intersection = safeAreaFrame.intersection(keyboardFrameInView)
+
+        let keyboardAnimationDuration = notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey]
+        let animationDuration: TimeInterval = (keyboardAnimationDuration as? NSNumber)?.doubleValue ?? 0
+        let animationCurveRawNSN = notification.userInfo?[UIResponder.keyboardAnimationCurveUserInfoKey] as? NSNumber
+           let animationCurveRaw = animationCurveRawNSN?.uintValue ?? UIView.AnimationOptions.curveEaseInOut.rawValue
+        let animationCurve = UIView.AnimationOptions(rawValue: animationCurveRaw)
+
+        UIView.animate(withDuration: animationDuration,
+                          delay: 0,
+                          options: animationCurve,
+                          animations: {
+               self.additionalSafeAreaInsets.bottom = intersection.height
+               self.view.layoutIfNeeded()
+           }, completion: nil)
+        
+        
+       
     }
 
     @objc func keyboardWillHide(notification: NSNotification) {
