@@ -36,6 +36,7 @@ public extension UIViewController {
         
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(UIViewController.onTapToDismissKeyboard(_:)))
         tapGesture.cancelsTouchesInView = false
+        tapGesture.delegate = self
         targetView!.addGestureRecognizer(tapGesture)
     }
     @objc func onTapToDismissKeyboard(_ sender:Any) {
@@ -117,5 +118,11 @@ public extension UIViewController {
 //            self.view.layoutIfNeeded();
 //        }
 //    }
-
+    
+}
+extension UIViewController: UIGestureRecognizerDelegate {
+    public func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
+        let isControllTapped = touch.view is UIControl
+        return !isControllTapped
+    }
 }
